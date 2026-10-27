@@ -1,0 +1,72 @@
+name: farmer-league
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-farmerleague}
+      POSTGRES_USER: ${POSTGRES_USER:-farmer}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans .env}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:?GRAFANA_DB_PASSWORD manquant dans .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  collector:
+    build: ./collector
+    restart: unless-stopped
+    environment:
+      API_FOOTBALL_KEY: ${API_FOOTBALL_KEY:-}
+      SEASONS: ${SEASONS:-2024}
+      INTERVAL_HOURS: ${INTERVAL_HOURS:-24}
+      REQUEST_DELAY_SECONDS: ${REQUEST_DELAY_SECONDS:-7}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-farmer}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-farmerleague}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=90d
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - promdata:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD manquant dans .env}
+      GF_USERS_DEFAULT_LANGUAGE: fr-FR
+      POSTGRES_DB: ${POSTGRES_DB:-farmerleague}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafanadata:/var/lib/grafana
+    depends_on:
+      - postgres
+      - prometheus
+    ports:
+      - "127.0.0.1:3000:3000"
+
+volumes:
+  pgdata:
+  promdata:
+  grafanadata:

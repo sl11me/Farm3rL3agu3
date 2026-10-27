@@ -1,0 +1,846 @@
+{
+  "uid": "farmer-ligue1-players",
+  "title": "Ligue 1 - Joueurs & Clubs",
+  "tags": [
+    "ligue1",
+    "football"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "time": {
+    "from": "now-1y",
+    "to": "now"
+  },
+  "refresh": "",
+  "templating": {
+    "list": [
+      {
+        "name": "season",
+        "label": "Saison",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "farmer-pg"
+        },
+        "query": "SELECT DISTINCT season AS __value, season || '/' || (season + 1) AS __text FROM player_season_stats ORDER BY 1 DESC",
+        "definition": "SELECT DISTINCT season AS __value, season || '/' || (season + 1) AS __text FROM player_season_stats ORDER BY 1 DESC",
+        "refresh": 1,
+        "multi": false,
+        "includeAll": false,
+        "current": {},
+        "sort": 0
+      },
+      {
+        "name": "club",
+        "label": "Club",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "farmer-pg"
+        },
+        "query": "SELECT name FROM teams t JOIN standings s ON s.team_id = t.id AND s.season = $season ORDER BY name",
+        "definition": "SELECT name FROM teams t JOIN standings s ON s.team_id = t.id AND s.season = $season ORDER BY name",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 0
+      },
+      {
+        "name": "position",
+        "label": "Poste",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "farmer-pg"
+        },
+        "query": "SELECT DISTINCT position FROM player_season_stats WHERE season = $season AND position IS NOT NULL ORDER BY 1",
+        "definition": "SELECT DISTINCT position FROM player_season_stats WHERE season = $season AND position IS NOT NULL ORDER BY 1",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 0
+      },
+      {
+        "name": "min_minutes",
+        "label": "Minutes min. (ratios)",
+        "type": "custom",
+        "query": "450,900,1350,1800",
+        "current": {
+          "text": "900",
+          "value": "900"
+        },
+        "options": [
+          {
+            "text": "450",
+            "value": "450",
+            "selected": false
+          },
+          {
+            "text": "900",
+            "value": "900",
+            "selected": true
+          },
+          {
+            "text": "1350",
+            "value": "1350",
+            "selected": false
+          },
+          {
+            "text": "1800",
+            "value": "1800",
+            "selected": false
+          }
+        ]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Vue d'ensemble",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Clubs",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(DISTINCT team_id) FROM v_player_stats WHERE season = $season"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Joueurs utilisés",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(DISTINCT player_id) FROM v_player_stats WHERE season = $season AND team IN ($club) AND appearances > 0"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Buts",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT sum(goals) FROM v_player_stats WHERE season = $season AND team IN ($club)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Dernière mise à jour",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT max(updated_at) FROM player_season_stats WHERE season = $season"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dateTimeFromNow"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Classement",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 14
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT s.rank AS \"#\", t.name AS \"Club\", s.played AS \"MJ\", s.win AS \"G\", s.draw AS \"N\", s.lose AS \"P\", s.goals_for AS \"BP\", s.goals_against AS \"BC\", s.goals_diff AS \"Diff\", s.points AS \"Pts\", s.form AS \"Forme\" FROM standings s JOIN teams t ON t.id = s.team_id WHERE s.season = $season ORDER BY s.rank"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "id": 7,
+      "type": "row",
+      "title": "Classements individuels",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 19,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 8,
+      "type": "bargauge",
+      "title": "Meilleurs buteurs",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 8,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT player || ' (' || coalesce(team_code, team) || ')' AS \"Joueur\", goals AS \"Buts\" FROM v_player_stats WHERE season = $season AND team IN ($club) AND goals IS NOT NULL  ORDER BY goals DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        }
+      }
+    },
+    {
+      "id": 9,
+      "type": "bargauge",
+      "title": "Meilleurs passeurs",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 20,
+        "w": 8,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT player || ' (' || coalesce(team_code, team) || ')' AS \"Joueur\", assists AS \"Passes D.\" FROM v_player_stats WHERE season = $season AND team IN ($club) AND assists IS NOT NULL  ORDER BY assists DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "bargauge",
+      "title": "Note moyenne (min. minutes)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 20,
+        "w": 8,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT player || ' (' || coalesce(team_code, team) || ')' AS \"Joueur\", rating AS \"Note\" FROM v_player_stats WHERE season = $season AND team IN ($club) AND rating IS NOT NULL AND minutes >= $min_minutes ORDER BY rating DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        }
+      }
+    },
+    {
+      "id": 11,
+      "type": "bargauge",
+      "title": "Buts + passes D. / 90 (min. minutes)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 8,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT player || ' (' || coalesce(team_code, team) || ')' AS \"Joueur\", ga_p90 AS \"G+A/90\" FROM v_player_stats WHERE season = $season AND team IN ($club) AND ga_p90 IS NOT NULL AND minutes >= $min_minutes ORDER BY ga_p90 DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "bargauge",
+      "title": "Passes clés / 90 (min. minutes)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 30,
+        "w": 8,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT player || ' (' || coalesce(team_code, team) || ')' AS \"Joueur\", key_passes_p90 AS \"PC/90\" FROM v_player_stats WHERE season = $season AND team IN ($club) AND key_passes_p90 IS NOT NULL AND minutes >= $min_minutes ORDER BY key_passes_p90 DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": "bargauge",
+      "title": "Tacles + interceptions / 90 (min. minutes)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 30,
+        "w": 8,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT player || ' (' || coalesce(team_code, team) || ')' AS \"Joueur\", tkl_int_p90 AS \"Tkl+Int/90\" FROM v_player_stats WHERE season = $season AND team IN ($club) AND tkl_int_p90 IS NOT NULL AND minutes >= $min_minutes ORDER BY tkl_int_p90 DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        }
+      }
+    },
+    {
+      "id": 14,
+      "type": "bargauge",
+      "title": "Dribbles réussis",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 8,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT player || ' (' || coalesce(team_code, team) || ')' AS \"Joueur\", dribbles_success AS \"Dribbles\" FROM v_player_stats WHERE season = $season AND team IN ($club) AND dribbles_success IS NOT NULL  ORDER BY dribbles_success DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        }
+      }
+    },
+    {
+      "id": 15,
+      "type": "bargauge",
+      "title": "Duels gagnés",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 40,
+        "w": 8,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT player || ' (' || coalesce(team_code, team) || ')' AS \"Joueur\", duels_won AS \"Duels\" FROM v_player_stats WHERE season = $season AND team IN ($club) AND duels_won IS NOT NULL  ORDER BY duels_won DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        }
+      }
+    },
+    {
+      "id": 16,
+      "type": "bargauge",
+      "title": "Arrêts (gardiens)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 40,
+        "w": 8,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT player || ' (' || coalesce(team_code, team) || ')' AS \"Joueur\", saves AS \"Arrêts\" FROM v_player_stats WHERE season = $season AND team IN ($club) AND saves IS NOT NULL  ORDER BY saves DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        }
+      }
+    },
+    {
+      "id": 17,
+      "type": "row",
+      "title": "Tous les joueurs",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 50,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 18,
+      "type": "table",
+      "title": "Statistiques joueurs",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "farmer-pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 51,
+        "w": 24,
+        "h": 22
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "farmer-pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT player AS \"Joueur\", team AS \"Club\", position AS \"Poste\", age AS \"Âge\", nationality AS \"Nationalité\",\n  appearances AS \"MJ\", lineups AS \"Tit.\", minutes AS \"Min\", rating AS \"Note\",\n  goals AS \"Buts\", assists AS \"PD\", ga_p90 AS \"G+A/90\",\n  shots_total AS \"Tirs\", shots_on AS \"Cadrés\", conversion_pct AS \"Conv. %\",\n  passes_total AS \"Passes\", passes_key AS \"Passes clés\", passes_accuracy AS \"Passes réussies\",\n  tackles_total AS \"Tacles\", interceptions AS \"Interc.\", blocks AS \"Contres\",\n  duels_total AS \"Duels\", duels_won_pct AS \"Duels %\", dribbles_success AS \"Dribbles\", dribbles_success_pct AS \"Dribbles %\",\n  fouls_committed AS \"Fautes\", fouls_drawn AS \"Fautes subies\", yellow_cards AS \"CJ\", red_cards AS \"CR\",\n  saves AS \"Arrêts\", goals_conceded AS \"Encaissés\", penalty_scored AS \"Pen. marqués\", penalty_missed AS \"Pen. ratés\"\nFROM v_player_stats WHERE season = $season AND team IN ($club) AND position IN ($position) ORDER BY minutes DESC NULLS LAST"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "sortBy": [
+          {
+            "displayName": "Min",
+            "desc": true
+          }
+        ]
+      }
+    }
+  ]
+}

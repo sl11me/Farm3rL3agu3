@@ -1,0 +1,9 @@
+apiVersion: 1
+
+providers:
+  - name: farmer-league
+    folder: Farmer League
+    type: file
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

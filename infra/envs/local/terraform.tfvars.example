@@ -1,0 +1,6 @@
+# Copier en terraform.tfvars (jamais commité) et remplir les valeurs
+postgres_password      = "change-me"
+grafana_db_password    = "change-me-too"
+grafana_admin_password = "change-me-admin"
+api_football_key       = ""
+seasons                = "2023"
